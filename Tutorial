@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Understanding AI from the Inside Out — AMI Tutorial · ESL Labs</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=Nunito:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F8F6F1;
+  --surface: #FFFFFF;
+  --teal: #1A6B5A;
+  --teal-lt: #E5F4F0;
+  --teal-mid: #2D8C76;
+  --amber: #C97D0A;
+  --amber-lt: #FEF3DC;
+  --ink: #1C1F23;
+  --muted: #6B7280;
+  --rule: #E2DDD6;
+  --correct: #D1F0E0;
+  --correct-dk: #0E7A4A;
+  --wrong: #FCE4E4;
+  --wrong-dk: #B91C1C;
+  --warn: #FEF3DC;
+  --warn-dk: #92400E;
+  --sidebar-w: 260px;
+  --serif: 'Lora', Georgia, serif;
+  --sans: 'Nunito', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--ink);line-height:1.75;font-size:16px}
+
+/* ── SIDEBAR ─────────────────────────────────────────────────────── */
+#sidebar {
+  position:fixed;top:0;left:0;width:var(--sidebar-w);height:100vh;
+  background:#1A2832;overflow-y:auto;z-index:100;
+  display:flex;flex-direction:column;
+}
+#sidebar-header{padding:1.4rem 1.2rem 1rem;border-bottom:1px solid #2D3E4A}
+#sidebar-header .logo{font-family:var(--serif);font-size:.95rem;color:#A8D8CE;font-style:italic;margin-bottom:.3rem}
+#sidebar-header h2{font-family:var(--sans);font-size:.78rem;font-weight:700;color:#E2DDD6;text-transform:uppercase;letter-spacing:.12em;line-height:1.4}
+#progress-bar-wrap{padding:.7rem 1.2rem;border-bottom:1px solid #2D3E4A}
+#progress-label{font-size:.7rem;color:#7B9AA8;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.35rem}
+#progress-bar{height:4px;background:#2D3E4A;border-radius:2px}
+#progress-fill{height:100%;background:var(--teal-mid);border-radius:2px;transition:width .4s ease;width:0%}
+#progress-pct{font-size:.7rem;color:#7B9AA8;text-align:right;margin-top:.2rem}
+nav{flex:1;padding:.6rem 0}
+nav a{
+  display:flex;align-items:center;gap:.6rem;
+  padding:.5rem 1.2rem;font-size:.8rem;color:#94A8B4;
+  text-decoration:none;transition:all .15s;border-left:3px solid transparent;
+  line-height:1.35;
+}
+nav a:hover{color:#E2DDD6;background:#22343F}
+nav a.active{color:#A8D8CE;background:#22343F;border-left-color:var(--teal-mid);font-weight:600}
+nav a .sec-num{
+  font-family:var(--mono);font-size:.68rem;color:#4A6575;
+  min-width:1.4em;flex-shrink:0;
+}
+nav a.active .sec-num{color:#5ABFA6}
+nav .nav-group-label{padding:.8rem 1.2rem .3rem;font-size:.64rem;text-transform:uppercase;letter-spacing:.12em;color:#4A6575;font-weight:700}
+
+/* ── MAIN ────────────────────────────────────────────────────────── */
+#main{margin-left:var(--sidebar-w);min-height:100vh}
+#hero{
+  background:linear-gradient(135deg,#1A2832 0%,#1A6B5A 60%,#2D8C76 100%);
+  padding:4rem 3rem 3rem;color:white;position:relative;overflow:hidden;
+}
+#hero::before{
+  content:'';position:absolute;top:-40%;right:-10%;
+  width:600px;height:600px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,.04) 0%,transparent 70%);
+}
+#hero .tag{font-family:var(--mono);font-size:.72rem;color:#A8D8CE;letter-spacing:.15em;text-transform:uppercase;margin-bottom:.8rem}
+#hero h1{font-family:var(--serif);font-size:2.4rem;line-height:1.2;margin-bottom:.8rem;font-weight:700}
+#hero p{font-size:1rem;color:rgba(255,255,255,.82);max-width:600px;line-height:1.7;margin-bottom:1.2rem}
+#hero .meta{font-size:.78rem;color:#5ABFA6;display:flex;gap:1.5rem;flex-wrap:wrap}
+.hero-badge{
+  display:inline-block;background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.2);border-radius:20px;
+  padding:.25rem .75rem;font-size:.75rem;color:rgba(255,255,255,.9);
+}
+
+/* ── CONTENT ─────────────────────────────────────────────────────── */
+.content-wrap{padding:2.5rem 3rem;max-width:820px}
+.section-block{margin-bottom:3.5rem;scroll-margin-top:1.5rem}
+.section-eyebrow{
+  font-family:var(--mono);font-size:.7rem;color:var(--teal);
+  text-transform:uppercase;letter-spacing:.14em;margin-bottom:.5rem;
+  display:flex;align-items:center;gap:.5rem;
+}
+.section-eyebrow::before{content:'';width:24px;height:2px;background:var(--teal);border-radius:1px}
+h2.section-title{font-family:var(--serif);font-size:1.75rem;color:var(--ink);margin-bottom:1rem;line-height:1.25;font-weight:700}
+h3.sub-title{font-family:var(--serif);font-size:1.15rem;color:var(--teal);margin:1.5rem 0 .6rem;font-weight:600}
+p{margin-bottom:.9rem;font-size:.97rem;color:var(--ink)}
+.lead{font-size:1.08rem;color:#374151;font-weight:500;margin-bottom:1.1rem;line-height:1.7}
+
+/* DEFINITION BOX */
+.def-box{
+  background:var(--teal-lt);border-left:4px solid var(--teal);
+  border-radius:0 8px 8px 0;padding:1rem 1.2rem;margin:1.2rem 0;
+}
+.def-box .def-label{font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;color:var(--teal);margin-bottom:.35rem;font-weight:600}
+.def-box .def-term{font-family:var(--serif);font-size:1.05rem;font-weight:700;color:var(--ink);margin-bottom:.3rem}
+.def-box p{font-size:.92rem;color:#1C4A40;margin-bottom:0}
+
+/* ANALOGY BOX */
+.analogy-box{
+  background:var(--amber-lt);border-left:4px solid var(--amber);
+  border-radius:0 8px 8px 0;padding:1rem 1.2rem;margin:1.2rem 0;
+}
+.analogy-box .analogy-label{font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;color:var(--amber);margin-bottom:.3rem;font-weight:600}
+.analogy-box p{font-size:.92rem;color:#5C3A0A;margin-bottom:0}
+
+/* KEY TERMS */
+.key-terms{background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:1rem 1.2rem;margin:1.2rem 0}
+.key-terms h4{font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.7rem}
+.term-row{display:flex;gap:.6rem;padding:.35rem 0;border-bottom:1px solid var(--rule);align-items:baseline}
+.term-row:last-child{border-bottom:none}
+.term-name{font-weight:700;color:var(--teal);font-size:.88rem;min-width:160px;flex-shrink:0}
+.term-def{font-size:.85rem;color:var(--muted)}
+
+/* TOOL CARD */
+.tool-card{
+  background:var(--surface);border:1px solid var(--rule);border-radius:10px;
+  padding:1.2rem;margin:.8rem 0;display:flex;gap:1rem;align-items:flex-start;
+  transition:box-shadow .2s;
+}
+.tool-card:hover{box-shadow:0 4px 16px rgba(26,107,90,.08)}
+.tool-icon{width:40px;height:40px;border-radius:8px;background:var(--teal-lt);
+  display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0}
+.tool-body h4{font-weight:700;font-size:.95rem;color:var(--ink);margin-bottom:.25rem}
+.tool-body .tool-level{font-family:var(--mono);font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;padding:.15rem .5rem;border-radius:10px;margin-left:.4rem;vertical-align:middle}
+.level-easy{background:#D1F0E0;color:#0E7A4A}
+.level-med{background:var(--amber-lt);color:var(--amber)}
+.level-adv{background:#FCE4E4;color:#B91C1C}
+.tool-body p{font-size:.87rem;color:var(--muted);margin-bottom:.5rem}
+.tool-body .tool-link{font-size:.85rem;color:var(--teal);font-weight:600;text-decoration:none}
+.tool-body .tool-link:hover{text-decoration:underline}
+
+/* STEP */
+.step-list{counter-reset:steps;list-style:none;margin:1rem 0}
+.step-list li{
+  counter-increment:steps;padding:.6rem 0 .6rem 3rem;position:relative;
+  border-left:2px solid var(--rule);margin-left:1rem;font-size:.92rem;
+}
+.step-list li::before{
+  content:counter(steps);
+  position:absolute;left:-1.1rem;top:.55rem;
+  width:2rem;height:2rem;border-radius:50%;
+  background:var(--teal);color:white;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.75rem;font-weight:700;font-family:var(--mono);
+  flex-shrink:0;
+}
+
+/* CODE */
+pre{background:#1A2832;color:#A8D8CE;padding:1rem;border-radius:8px;font-family:var(--mono);font-size:.82rem;overflow-x:auto;margin:1rem 0;line-height:1.6}
+code{font-family:var(--mono);font-size:.85em;background:#E5F4F0;color:var(--teal);padding:.1em .3em;border-radius:3px}
+
+/* DIVIDER */
+.section-divider{border:none;border-top:2px solid var(--rule);margin:2.5rem 0}
+
+/* ── QUIZ ────────────────────────────────────────────────────────── */
+.quiz-block{background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:1.5rem;margin:1.8rem 0}
+.quiz-label{font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.12em;color:var(--teal);margin-bottom:.8rem;display:flex;align-items:center;gap:.4rem}
+.quiz-label::before{content:'✦';font-size:.6rem}
+.quiz-q{font-family:var(--serif);font-size:1rem;font-weight:600;color:var(--ink);margin-bottom:.9rem;line-height:1.4}
+.quiz-options{display:flex;flex-direction:column;gap:.5rem}
+.quiz-opt{
+  border:1.5px solid var(--rule);border-radius:8px;padding:.65rem 1rem;
+  cursor:pointer;font-size:.9rem;transition:all .15s;background:var(--bg);
+  text-align:left;color:var(--ink);display:flex;align-items:center;gap:.6rem;
+}
+.quiz-opt:hover:not(.answered){border-color:var(--teal);background:var(--teal-lt)}
+.quiz-opt .opt-letter{
+  font-family:var(--mono);font-size:.72rem;font-weight:700;
+  width:1.6rem;height:1.6rem;border-radius:50%;border:1.5px solid currentColor;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  color:var(--muted);
+}
+.quiz-opt.correct{background:var(--correct);border-color:var(--correct-dk);color:var(--correct-dk)}
+.quiz-opt.correct .opt-letter{border-color:var(--correct-dk);color:var(--correct-dk)}
+.quiz-opt.wrong{background:var(--wrong);border-color:var(--wrong-dk);color:var(--wrong-dk)}
+.quiz-opt.wrong .opt-letter{border-color:var(--wrong-dk);color:var(--wrong-dk)}
+.quiz-feedback{
+  margin-top:.8rem;padding:.7rem 1rem;border-radius:8px;font-size:.88rem;display:none;line-height:1.5;
+}
+.quiz-feedback.show{display:block}
+.quiz-feedback.correct{background:var(--correct);color:var(--correct-dk)}
+.quiz-feedback.wrong{background:var(--wrong);color:var(--wrong-dk)}
+
+/* FINAL SCORE */
+#score-display{
+  background:linear-gradient(135deg,var(--teal),var(--teal-mid));
+  color:white;border-radius:12px;padding:2rem;text-align:center;
+  display:none;margin-top:1.5rem;
+}
+#score-display h3{font-family:var(--serif);font-size:1.4rem;margin-bottom:.5rem}
+#score-display .score-num{font-size:3rem;font-weight:700;font-family:var(--mono);margin:.5rem 0}
+#score-display p{font-size:.9rem;opacity:.9}
+#show-score-btn{
+  background:var(--teal);color:white;border:none;border-radius:8px;
+  padding:.8rem 2rem;font-size:.95rem;font-weight:700;cursor:pointer;
+  font-family:var(--sans);transition:background .2s;margin-top:1rem;
+}
+#show-score-btn:hover{background:var(--teal-mid)}
+
+/* FINAL TEST */
+#final-test{background:var(--surface);border:2px solid var(--teal);border-radius:12px;padding:1.8rem;margin:1.5rem 0}
+#final-test h3{font-family:var(--serif);font-size:1.2rem;color:var(--teal);margin-bottom:.5rem}
+#final-test p{font-size:.9rem;color:var(--muted);margin-bottom:1.2rem}
+
+/* FOOTER */
+footer{background:#1A2832;color:#7B9AA8;text-align:center;padding:1.5rem;font-size:.8rem;margin-left:0}
+
+/* MOBILE */
+@media(max-width:768px){
+  #sidebar{transform:translateX(-100%);transition:transform .3s}
+  #sidebar.open{transform:translateX(0)}
+  #main{margin-left:0}
+  .content-wrap{padding:1.5rem}
+  #hero{padding:2rem 1.5rem}
+  #hero h1{font-size:1.7rem}
+  #mobile-toggle{display:flex}
+}
+#mobile-toggle{
+  display:none;position:fixed;top:1rem;left:1rem;z-index:200;
+  background:var(--teal);color:white;border:none;border-radius:8px;
+  width:40px;height:40px;align-items:center;justify-content:center;
+  font-size:1.2rem;cursor:pointer;
+}
+</style>
+</head>
+<body>
+
+<button id="mobile-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+
+<!-- ══ SIDEBAR ══ -->
+<aside id="sidebar">
+  <div id="sidebar-header">
+    <div class="logo">MOG Explains · ESL Labs</div>
+    <h2>AMI: Understanding AI from the Inside Out</h2>
+  </div>
+  <div id="progress-bar-wrap">
+    <div id="progress-label">Your Progress</div>
+    <div id="progress-bar"><div id="progress-fill"></div></div>
+    <div id="progress-pct">0% complete</div>
+  </div>
+  <nav id="sidenav">
+    <div class="nav-group-label">Foundations</div>
+    <a href="#s1" class="nav-link"><span class="sec-num">01</span>The Black Box Problem</a>
+    <a href="#s2" class="nav-link"><span class="sec-num">02</span>What is Interpretability?</a>
+    <a href="#s3" class="nav-link"><span class="sec-num">03</span>The Superposition Hypothesis</a>
+    <div class="nav-group-label">Core Methods</div>
+    <a href="#s4" class="nav-link"><span class="sec-num">04</span>Dictionary Learning</a>
+    <a href="#s5" class="nav-link"><span class="sec-num">05</span>Sparse Autoencoders (SAEs)</a>
+    <a href="#s6" class="nav-link"><span class="sec-num">06</span>Circuits</a>
+    <a href="#s7" class="nav-link"><span class="sec-num">07</span>Feature Geometry</a>
+    <a href="#s8" class="nav-link"><span class="sec-num">08</span>Causal Validation</a>
+    <div class="nav-group-label">The Big Picture</div>
+    <a href="#s9" class="nav-link"><span class="sec-num">09</span>Three Pillars of AMI</a>
+    <a href="#s10" class="nav-link"><span class="sec-num">10</span>AI Safety Applications</a>
+    <div class="nav-group-label">Practice</div>
+    <a href="#s11" class="nav-link"><span class="sec-num">11</span>Hands-On Tools</a>
+    <a href="#s12" class="nav-link"><span class="sec-num">12</span>Full Self-Assessment</a>
+  </nav>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<main id="main">
+<div id="hero">
+  <div class="tag">ESL Labs · Ronin Institute · W3C AI-KR</div>
+  <h1>Understanding AI<br>from the Inside Out</h1>
+  <p>A plain-language guide to Ambitious Mechanistic Interpretability — what it is, why it matters, and how researchers are working to read the mind of an AI.</p>
+  <div class="meta">
+    <span>🎓 College / Undergraduate Level</span>
+    <span>📖 12 Sections</span>
+    <span>✦ Self-assessment included</span>
+  </div>
+</div>
+
+<div class="content-wrap">
+
+<!-- ══ S1 ══ -->
+<div class="section-block" id="s1">
+  <div class="section-eyebrow">Section 01 · Foundations</div>
+  <h2 class="section-title">The Black Box Problem</h2>
+  <p class="lead">Modern AI systems are extraordinarily powerful — and almost completely opaque. No one fully understands what happens inside them.</p>
+
+  <p>Imagine you hire a consultant who gives you brilliant answers to every question. But when you ask <em>how</em> they came up with those answers, they can't — or won't — explain. You trust the results, but you have no idea what's happening inside their head. That's the situation we're in with modern AI.</p>
+
+  <p>A large language model like GPT-4 or Claude processes your input through hundreds of billions of numbers called <strong>parameters</strong>. These numbers were adjusted during training until the model became very good at predicting useful outputs. But no human designed those specific numbers — they emerged from the training process. So nobody knows exactly what computation is happening.</p>
+
+  <div class="analogy-box">
+    <div class="analogy-label">🔍 Analogy</div>
+    <p>Think of a calculator versus a human mathematician. With a calculator, you can see every step: add these, multiply those, done. With the mathematician, you can see the answer — but what happened in their brain to get there? That's the black box problem for AI at a much larger scale.</p>
+  </div>
+
+  <h3 class="sub-title">Why does this matter?</h3>
+  <p>When AI systems are used to make important decisions — medical diagnoses, legal judgements, financial loans — we need to be able to trust them. But trust without understanding is risky. An AI might give the right answer for the wrong reasons, and fail in unpredictable ways when the situation changes slightly.</p>
+
+  <div class="def-box">
+    <div class="def-label">Definition</div>
+    <div class="def-term">The Black Box Problem</div>
+    <p>The fact that modern AI systems produce outputs we can observe, but use internal processes we cannot directly inspect or understand. The system accepts inputs and produces outputs — but what happens in between is opaque.</p>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="quiz-block">
+    <div class="quiz-label">Quick Check — Section 01</div>
+    <div class="quiz-q">Why is the "black box" problem a concern for AI safety?</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="answer(this,'wrong')"><span class="opt-letter">A</span>Because AI systems are too slow to be useful</button>
+      <button class="quiz-opt" onclick="answer(this,'correct')"><span class="opt-letter">B</span>Because we can't verify why an AI produces a given output, making it hard to trust or fix</button>
+      <button class="quiz-opt" onclick="answer(this,'wrong')"><span class="opt-letter">C</span>Because AI systems don't have enough parameters to store knowledge</button>
+      <button class="quiz-opt" onclick="answer(this,'wrong')"><span class="opt-letter">D</span>Because training data is always biased</button>
+    </div>
+    <div class="quiz-feedback correct">✓ Correct! Without understanding the internal process, we can't verify whether an AI is reasoning correctly or just pattern-matching in ways that happen to work on training data.</div>
+    <div class="quiz-feedback wrong">Not quite. The issue is about transparency and trust — if we can't see inside the process, we can't verify it's working correctly or safely.</div>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- ══ S2 ══ -->
+<div class="section-block" id="s2">
+  <div class="section-eyebrow">Section 02 · Foundations</div>
+  <h2 class="section-title">What is Interpretability?</h2>
+  <p class="lead">Interpretability is the field that tries to open the black box. But there are two very different ways to try.</p>
+
+  <h3 class="sub-title">The Old Approach: Explainable AI (XAI)</h3>
+  <p>The traditional approach to understanding AI is called <strong>Explainable AI</strong> or XAI. It works by looking at the <em>outside</em> of the model. You feed it inputs and watch outputs, then try to build a simpler model that explains the pattern.</p>
+  <p>Common XAI techniques include <strong>attention maps</strong> (which parts of your input did the AI look at most?), <strong>saliency scores</strong> (which words most influenced the output?), and <strong>probing classifiers</strong> (does the model seem to "know" a certain concept?). These tools are useful, but they describe associations — not the actual computation that produced the answer.</p>
+
+  <div class="analogy-box">
+    <div class="analogy-label">🔍 Analogy</div>
+    <p>XAI is like figuring out how a car engine works by watching which dashboard lights come on. You might learn some patterns ("when the temperature light comes on, the car overheats"), but you're not understanding the engine itself.</p>
+  </div>
+
+  <h3 class="sub-title">The New Approach: Mechanistic Interpretability</h3>
+  <p><strong>Mechanistic interpretability</strong> takes a completely different bet. Instead of looking at inputs and outputs, it goes <em>inside</em> the model — directly examining the weights, activations, and computations. The goal is to recover the actual algorithm the model is running, expressed in human-readable terms.</p>
+
+  <div class="def-box">
+    <div class="def-label">Definition</div>
+    <div class="def-term">Mechanistic Interpretability</div>
+    <p>A research field that attempts to reverse-engineer trained neural networks — to translate their internal computations (weights, activations, circuits) into human-understandable descriptions. Rather than approximating the model from outside, it tries to recover the exact algorithm running inside.</p>
+  </div>
+
+  <div class="key-terms">
+    <h4>Key Terms — Section 02</h4>
+    <div class="term-row"><span class="term-name">XAI (Explainable AI)</span><span class="term-def">Techniques that explain AI behaviour by observing inputs and outputs, without looking inside</span></div>
+    <div class="term-row"><span class="term-name">Mechanistic Interpretability</span><span class="term-def">Opening the model up and reverse-engineering the actual computation</span></div>
+    <div class="term-row"><span class="term-name">Weights / Parameters</span><span class="term-def">The numbers inside a neural network that encode everything it has learned</span></div>
+    <div class="term-row"><span class="term-name">Activations</span><span class="term-def">The values produced at each layer as the model processes an input — the model's "working memory"</span></div>
+  </div>
+
+  <div class="quiz-block">
+    <div class="quiz-label">Quick Check — Section 02</div>
+    <div class="quiz-q">What is the key difference between XAI and mechanistic interpretability?</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="answer(this,'wrong')"><span class="opt-letter">A</span>XAI uses newer models; mechanistic interpretability uses older ones</button>
+      <button class="quiz-opt" onclick="answer(this,'wrong')"><span class="opt-letter">B</span>XAI requires more computing power than mechanistic interpretability</button>
+      <button class="quiz-opt" onclick="answer(this,'correct')"><span class="opt-letter">C</span>XAI explains behaviour by observing input/output patterns; mechanistic interpretability examines the internal computation directly</button>
+      <button class="quiz-opt" onclick="answer(this,'wrong')"><span class="opt-letter">D</span>They are the same thing with different names</button>
+    </div>
+    <div class="quiz-feedback correct">✓ Correct! XAI approximates the model from the outside; mechanistic interpretability goes inside and tries to recover the exact algorithm.</div>
+    <div class="quiz-feedback wrong">Not quite — the key distinction is inside vs. outside. XAI never directly inspects the model's weights or computations.</div>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- ══ S3 ══ -->
+<div class="section-block" id="s3">
+  <div class="section-eyebrow">Section 03 · Foundations</div>
+  <h2 class="section-title">The Superposition Hypothesis</h2>
+  <p class="lead">The biggest puzzle in mechanistic interpretability: how neural networks pack enormous amounts of knowledge into a surprisingly small space.</p>
+
+  <p>You might expect that each concept an AI knows — "Paris", "sadness", "Python code" — would be stored in a dedicated neuron. One concept, one neuron. Neat and easy to inspect. But that's not what happens.</p>
+
+  <p>Neural networks have discovered a clever trick: they store many more concepts than they have neurons by <em>overlapping</em> them. Each concept is encoded as a <strong>direction</strong> in a multi-dimensional space, and many directions can share the same neurons simultaneously — like multiple radio signals on the same wire.</p>
+
+  <div class="analogy-box">
+    <div class="analogy-label">🔍 Analogy</div>
+    <p>Imagine a hotel with 100 rooms, but 500 guests checking in at different times. No single guest is there all the time, so the hotel can use the rooms for multiple people if they stagger their stays. Neural networks do something similar — features are "sparse" (only a few activate at once), so many features can share the same neurons.</p>
+  </div>
+
+  <p>The result: a single neuron might fire in response to "the Eiffel Tower", "Python code", <em>and</em> "the feeling of sadness" — three completely unrelated things. This is called <strong>polysemanticity</strong>. It makes the model efficient, but it makes analysis very hard. You can't just look at a neuron and say "that's the Paris neuron."</p>
+
+  <div class="def-box">
+    <div class="def-label">Definition</div>
+    <div class="def-term">Superposition Hypothesis</div>
+    <p>The idea that neural networks encode more concepts (features) than they have neurons by storing each concept as a direction in activation space, allowing many features to overlap within the same neurons. Because features are sparse — only a few activate at once — the overlaps cause only small amounts of interference.</p>
+  </div>
+
+  <div class="def-box">
+    <div class="def-label">Definition</div>
+    <div class="def-term">Polysemanticity</div>
+    <p>When a single neuron activates for multiple unrelated concepts. The opposite — one neuron, one concept — is called <strong>monosemanticity</strong>, and is what interpretability researchers aim to recover.</p>
+  </div>
+
+  <div class="quiz-block">
+    <div class="quiz-label">Quick Check — Section 03</div>
+    <div class="quiz-q">Why does superposition make neural network analysis hard?</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="answer(this,'wrong')"><span class="opt-letter">A</span>It makes the network run slower</button>
+      <button class="quiz-opt" onclick="answer(this,'correct')"><span class="opt-letter">B</span>A single neuron responds to many unrelated concepts, so you can't identify what each neuron "means"</button>
+      <button class="quiz-opt" onclick="answer(this,'wrong')"><span class="opt-letter">C</span>It prevents the model from learning new information</button>
+      <button class="quiz-opt" onclick="answer(this,'wrong')"><span class="opt-letter">D</span>It requires more training data</button>
+    </div>
+    <div class="quiz-feedback correct">✓ Correct! When one neuron activates for many unrelated things, you can't assign it a single meaning — which is exactly what interpretability needs to do.</div>
+    <div class="quiz-feedback wrong">Try again — think about what makes neurons hard to label when they respond to multiple unrelated concepts.</div>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- ══ S4 ══ -->
+<div class="section-block" id="s4">
+  <div class="section-eyebrow">Section 04 · Core Methods</div>
+  <h2 class="section-title">Dictionary Learning</h2>
+  <p class="lead">The mathematical idea that connects superposition to the tools researchers actually use — and why SAEs are not the only solution.</p>
+
+  <p>If features are stored as directions in a high-dimensional space, the challenge is: how do you find them? You need a way to decompose the tangled, overlapping activations into a clean set of individual building blocks.</p>
+  <p>This is a well-known problem in mathematics called <strong>dictionary learning</strong>. The idea: find a set of "atoms" (the dictionary) such that any activation can be described using only a small number of those atoms at once. A few atoms, combined, reconstruct the full signal.</p>
+
+  <div class="analogy-box">
+    <div class="analogy-label">🔍 Analogy</div>
+    <p>A musical chord is made of individual notes. Dictionary learning is like training a tool to hear a chord and figure out which individual notes are in it — even if many possible combinations could produce a similar sound. The key insight is that at any given moment, only a few notes are playing.</p>
+  </div>
+
+  <p>The conceptual chain from superposition to the tools researchers use looks like this:</p>
+
+  <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin:1rem 0;padding:1rem;background:var(--surface);border-radius:8px;border:1px solid var(--rule)">
+    <div style="background:var(--teal-lt);border-radius:6px;padding:.4rem .8rem;font-size:.85rem;font-weight:600;color:var(--teal)">Superposition</div>
+    <div style="color:var(--muted)">→</div>
+    <div style="background:#EEF0FE;border-radius:6px;padding:.4rem .8rem;font-size:.85rem;font-weight:600;color:#3730A3">Sparse Representations</div>
+    <div style="color:var(--muted)">→</div>
+    <div style="background:#F3E8FF;border-radius:6px;padding:.4rem .8rem;font-size:.85rem;font-weight:600;color:#6B21A8">Dictionary Learning</div>
+    <div style="color:var(--muted)">→</div>
+    <div style="background:var(--teal);border-radius:6px;padding:.4rem .8rem;font-size:.85rem;font-weight:600;color:white">Sparse Autoencoders</div>
+  </div>
+
+  <div class="def-box">
+    <div class="def-label">Definition</div>
+    <div class="def-term">Dictionary Learning</div>
+    <p>A mathematical framework for finding a set of "atoms" (basis elements) such that any signal in the data can be expressed as a sparse combination of a small number of those atoms. In AMI, the "signal" is a neural network's activations, and the "atoms" are the features the network uses internally.</p>
+  </div>
+
+  <p><strong>Important:</strong> Sparse autoencoders (SAEs, covered next) are one implementation of dictionary learning, but not the only one. Researchers are also exploring k-sparse autoencoders, non-negative matrix factorisation, and other approaches. SAEs are the current frontrunner — but the mathematical problem they solve is dictionary learning.</p>
+
+  <div class="quiz-block">
+    <div class="quiz-label">Quick Check — Section 04</div>
+    <div class="quiz-q">What does "sparse" mean in the context of dictionary learning?</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="answer(this,'wrong')"><span class="opt-letter">A</span>The dictionary has very few words in it</button>
+      <button class="quiz-opt" onclick="answer(this,'correct')"><span class="opt-letter">B</span>Any given activation can be described using only a small number of the dictionary's atoms at once</button>
+      <button class="quiz-opt" onclick="answer(this,'wrong')"><span class="opt-letter">C</span>The model uses less memory than usual</button>
+      <button class="quiz-opt" onclick="answer(this,'wrong')"><span class="opt-letter">D</span>The features are stored far apart from each other</button>
+    </div>
+    <div class="quiz-feedback correct">✓ Correct! Sparse means only a few atoms are needed to reconstruct any given activation — most atoms are "off" at any moment, just like most features are inactive for any given input.</div>
+    <div class="quiz-feedback wrong">Think about the hotel analogy — "sparse" means only a few things are active at once, not that there are few things total.</div>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- ══ S5 ══ -->
+<div class="section-block" id="s5">
+  <div class="section-eyebrow">Section 05 · Core Methods</div>
+  <h2 class="section-title">Sparse Autoencoders (SAEs)</h2>
+  <p class="lead">The main tool researchers currently use to "unpack" neural networks and find their hidden features.</p>
+
+  <p>A <strong>sparse autoencoder (SAE)</strong> is a small neural network that is trained to do one job: take the messy, overlapping activations from inside a large language model, and decompose them into a much larger set of clean, individual features — with most features being zero (inactive) at any given moment.</p>
+
+  <h3 class="sub-title">How it works — step by step</h3>
+  <ol class="step-list">
+    <li><strong>Input:</strong> Take the activation vector from a specific layer of the target model (e.g. layer 12 of a transformer, a list of ~4,000 numbers)</li>
+    <li><strong>Encoder:</strong> The SAE's encoder maps this to a much larger space — e.g. 32,000 numbers. Most of these will be zero.</li>
+    <li><strong>Sparse code:</strong> This large, mostly-zero vector is the "feature code" — each non-zero position corresponds to an active feature</li>
+    <li><strong>Decoder:</strong> The decoder reconstructs the original activation from the sparse code</li>
+    <li><strong>Training:</strong> The SAE learns by minimising reconstruction error while being penalised for having too many non-zero values at once (L1 penalty)</li>
+  </ol>
+
+  <div class="analogy-box">
+    <div class="analogy-label">🔍 Analogy</div>
+    <p>Think of the SAE as a very good translator. The original activations are like a sentence written in a compressed, ambiguous shorthand. The SAE translates it into a clear, expanded form where each word has one precise meaning — even though the translation is much longer, it's much easier to understand.</p>
+  </div>
+
+  <div class="def-box">
+    <div class="def-label">Definition</div>
+    <div class="def-term">Sparse Autoencoder (SAE)</div>
+    <p>A neural network trained to reconstruct the activations of a larger model from a sparse, high-dimensional code. The sparsity constraint forces the SAE to find a basis in which each concept is represented individually, disentangling the superposition that makes raw activations hard to interpret.</p>
+  </div>
+
+  <h3 class="sub-title">What researchers have found</h3>
+  <p>When SAEs were applied to production-scale models like Claude 3 Sonnet (Anthropic, 2024), the recovered features corresponded to coherent human-interpretable concepts: features for specific programming languages, grammatical patterns, emotional tones, and even safety-relevant behaviours. Researchers verified these by <em>activating</em> features artificially and checking whether model behaviour changed as predicted.</p>
+
+  <h3 class="sub-title">Current limitations — be honest about them</h3>
+  <p>SAEs are powerful but not perfect. Current challenges include <strong>feature splitting</strong> (one concept splits into multiple features), <strong>feature absorption</strong> (one feature captures multiple concepts), and <strong>incomplete coverage</strong> (not all activations are well-explained). SAEs are a breakthrough, not a solved problem.</p>
+
+  <div class="quiz-block">
+    <div class="quiz-label">Quick Check — Section 05</div>
+    <div class="quiz-q">What is the purpose of the sparsity penalty during SAE training?</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="answer(this,'wrong')"><span class="opt-letter">A</span>To make the SAE train faster</button>
+      <button class="quiz-opt" onclick="answer(this,'wrong')"><span class="opt-letter">B</span>To reduce the size of the model being analysed</button>
+      <button class="quiz-opt" onclick="answer(this,'correct')"><span class="opt-letter">C</span>To force the SAE to represent each input using only a few active features at once, disentangling superposed concepts</button>
+      <button class="quiz-opt" onclick="answer(this,'wrong')"><span class="opt-letter">D</span>To prevent the model from memorising training data</button>
+    </div>
+    <div class="quiz-feedback correct">✓ Correct! The sparsity penalty is what pushes the SAE to find the underlying feature basis — without it, the SAE could just memorise activations without finding the true structure.</div>
+    <div class="quiz-feedback wrong">Think about what "sparse" means here — and why forcing sparsity would help disentangle things that are overlapping in the original activations.</div>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- ══ S6 ══ -->
+<div class="section-block" id="s6">
+  <div class="section-eyebrow">Section 06 · Core Methods</div>
+  <h2 class="section-title">Circuits</h2>
+  <p class="lead">Before SAEs, a different approach tried to find the algorithms inside neural networks — by tracing how information flows step by step.</p>
+
+  <p>A <strong>circuit</strong> in mechanistic interpretability is like a subroutine inside a program. It's a specific set of components — attention heads, neurons, residual stream positions — that work together to perform a particular computation. Finding circuits means identifying which parts of the network are responsible for which behaviours.</p>
+
+  <div class="analogy-box">
+    <div class="analogy-label">🔍 Analogy</div>
+    <p>Think of an electrical circuit in a device. You could look at the whole device and just observe that it produces light. Or you could trace the circuit: this switch connects to that wire, which connects to this resistor, which controls the voltage at the bulb. Circuit analysis in AI is the same idea — tracing the flow of information to understand the mechanism.</p>
+  </div>
+
+  <h3 class="sub-title">A famous example: Indirect Object Identification</h3>
+  <p>Researchers at Anthropic (Wang et al., 2022) traced the exact circuit responsible for a specific linguistic task in GPT-2. The task: given "When Mary and John went to the store, John gave a bottle of milk to ___", predict "Mary". They identified the exact attention heads and how information flowed between them to produce this output — the first circuit fully traced in a real language model.</p>
+
+  <h3 class="sub-title">Induction Heads</h3>
+  <p>Another key discovery: <strong>induction heads</strong>. These are pairs of attention heads that work together to copy patterns from earlier in a sequence. If a model saw "A→B" earlier in the text, induction heads help predict that another "A" will be followed by "B". This is one of the mechanisms behind in-context learning — learning from examples given in the prompt.</p>
+
+  <div class="def-box">
+    <div class="def-label">Definition</div>
+    <div class="def-term">Circuit</div>
+    <p>A minimal set of network components (attention heads, MLP neurons, residual stream positions) that are causally necessary and sufficient to perform a specific computation or behaviour. Finding a circuit means being able to say: "these specific parts, connected in this specific way, are what produces this output."</p>
+  </div>
+
+  <div class="key-terms">
+    <h4>Key Terms — Section 06</h4>
+    <div class="term-row"><span class="term-name">Attention Head</span><span class="term-def">A component of a transformer that decides which parts of the input to "look at" when processing each token</span></div>
+    <div class="term-row"><span class="term-name">Residual Stream</span><span class="term-def">The "working memory" of a transformer — a vector that gets updated by each layer</span></div>
+    <div class="term-row"><span class="term-name">Induction Head</span><span class="term-def">A pair of attention heads that enables pattern-copying and in-context learning</span></div>
+    <div class="term-row"><span class="term-name">Activation Patching</span><span class="term-def">Replacing an activation from one run with that from another, to test whether a component is causally responsible for a behaviour</span></div>
+  </div>
+
+  <div class="quiz-block">
+    <div class="quiz-label">Quick Check — Section 06</div>
+    <div class="quiz-q">What does it mean to say a component is "causally necessary" for a circuit?</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="answer(this,'wrong')"><span class="opt-letter">A</span>The component is the largest one in the network</button>
+      <button class="quiz-opt" onclick="answer(this,'correct')"><span class="opt-letter">B</span>If you remove or disable that component, the target behaviour breaks or degrades significantly</button>
+      <button class="quiz-opt" onclick="answer(this,'wrong')"><span class="opt-letter">C</span>The component was trained on the most data</button>
+      <button class="quiz-opt" onclick="answer(this,'wrong')"><span class="opt-letter">D</span>The component fires most frequently across all inputs</button>
+    </div>
+    <div class="quiz-feedback correct">✓ Correct! "Causally necessary" means you can prove the component matters by removing it and showing the behaviour degrades — not just that it's correlated with the behaviour.</div>
+    <div class="quiz-feedback wrong">Think about what "necessary" means in everyday logic — if something is necessary, you'd notice its absence.</div>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- ══ S7 ══ -->
+<div class="section-block" id="s7">
+  <div class="section-eyebrow">Section 07 · Core Methods</div>
+  <h2 class="section-title">Feature Geometry</h2>
+  <p class="lead">Once you've found individual features, the next question is: how are they organised in space?</p>
+
+  <p>When SAEs recover thousands or millions of features from a language model, a new question arises: are those features scattered randomly, or are they organised into some kind of structure? Do related concepts cluster together? Do abstract concepts "compose" from simpler ones?</p>
+  <p>This is the <strong>Feature Geometry</strong> research programme. It studies the shape of the space in which features live.</p>
+
+  <div class="analogy-box">
+    <div class="analogy-label">🔍 Analogy</div>
+    <p>Think of a city map. Individual buildings (features) are interesting, but the pattern of streets, neighbourhoods, and districts (geometry) tells you much more about how the city works. Feature geometry asks: what are the "neighbourhoods" in the model's concept space?</p>
+  </div>
+
+  <h3 class="sub-title">A key recent finding: Manifold Steering</h3>
+  <p>A 2026 paper (Wurgaft et al.) discovered something important: the features in a neural network's activation space don't just sit in a flat, Euclidean space. They lie on a curved <strong>manifold</strong> — like how the surface of the Earth is curved, not flat. When researchers tried to steer a model's behaviour by moving in a straight line through feature space (linear steering), the model produced strange, incoherent outputs. When they steered along the curve of the manifold (manifold steering), the model produced natural, coherent behaviour changes.</p>
+
+  <div class="def-box">
+    <div class="def-label">Definition</div>
+    <div class="def-term">Feature Geometry</div>
+    <p>The study of how features are organised and related in a neural network's activation space — including whether concepts cluster together, form hierarchies, or lie on curved surfaces (manifolds). Understanding feature geometry is necessary for scaling interpretability beyond individual features to understanding how concepts compose and relate.</p>
+  </div>
+
+  <div class="quiz-block">
+    <div class="quiz-label">Quick Check — Section 07</div>
+    <div class="quiz-q">Why does it matter if feature space is curved (a manifold) rather than flat?</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="answer(this,'wrong')"><span class="opt-letter">A</span>Curved spaces use less memory</button>
+      <button class="quiz-opt" onclick="answer(this,'wrong')"><span class="opt-letter">B</span>Flat spaces are harder to compute</button>
+      <button class="quiz-opt" onclick="answer(this,'correct')"><span class="opt-letter">C</span>Moving in a straight line through curved feature space takes the model "off-road" and produces unnatural outputs; following the curve produces natural behaviour changes</button>
+      <button class="quiz-opt" onclick="answer(this,'wrong')"><span class="opt-letter">D</span>Curved spaces prevent superposition</button>
+    </div>
+    <div class="quiz-feedback correct">✓ Correct! If you ignore the curvature and go in a straight line, you end up in regions the model never uses — like cutting through a mountain instead of following the road.</div>
+    <div class="quiz-feedback wrong">Think about navigation on a curved surface like the Earth — the shortest path isn't always a straight line.</div>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- ══ S8 ══ -->
+<div class="section-block" id="s8">
+  <div class="section-eyebrow">Section 08 · Core Methods</div>
+  <h2 class="section-title">Causal Validation</h2>
+  <p class="lead">Labelling a feature is not the same as understanding it. The field requires proof, not just description.</p>
+
+  <p>Here's the trap: you find a feature that seems to activate when the model processes text about "royalty". You label it the "royalty feature". But does the model actually use this feature to produce its outputs about royalty? Or is it just correlated — activating alongside royalty-related text, but not causing anything?</p>
+  <p>This is the distinction between <strong>correlation</strong> and <strong>causation</strong>, and it's critical. In mechanistic interpretability, a feature is only considered validated if researchers can show it <em>causes</em> the behaviour it purports to explain — by intervening on it and observing the predicted effect.</p>
+
+  <div class="analogy-box">
+    <div class="analogy-label">🔍 Analogy</div>
+    <p>Ice cream sales and drowning rates are correlated (both peak in summer). But ice cream doesn't cause drowning — the real cause is hot weather. In AI, you could find a feature that activates alongside a behaviour, but unless you can <em>turn it on or off and see the behaviour change</em>, you haven't proven it's the cause.</p>
+  </div>
+
+  <div class="def-box">
+    <div class="def-label">Definition</div>
+    <div class="def-term">Causal Validation</div>
+    <p>The requirement that any proposed feature or circuit must be demonstrated to <em>causally</em> produce the behaviour it is claimed to explain — not just correlate with it. This is done through intervention experiments: artificially activating, suppressing, or patching features and measuring the effect on the model's output.</p>
+  </div>
+
+  <h3 class="sub-title">How researchers test this</h3>
+  <p><strong>Activation patching:</strong> Take the activation from a run where the model got the right answer. Patch it into a run where the model gets it wrong. Does performance recover? If so, that activation was causally responsible.</p>
+  <p><strong>Feature steering:</strong> Artificially clamp a feature to a high activation value. Does the model start talking about what the feature supposedly represents? If yes, the feature is causal, not just correlational.</p>
+  <p><strong>Ablation:</strong> Remove or zero-out a component entirely. Does the target behaviour break? If so, that component was necessary.</p>
+
+  <div class="quiz-block">
+    <div class="quiz-label">Quick Check — Section 08</div>
+    <div class="quiz-q">A researcher finds that Feature #42 always activates when the model talks about cats. This means Feature #42 definitely causes the cat-related outputs. True or false?</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="answer(this,'wrong')"><span class="opt-letter">A</span>True — if it always activates alongside cat outputs, it must be the cause</button>
+      <button class="quiz-opt" onclick="answer(this,'correct')"><span class="opt-letter">B</span>False — correlation doesn't imply causation; the feature must be tested by intervention to confirm it actually drives the behaviour</button>
+      <button class="quiz-opt" onclick="answer(this,'wrong')"><span class="opt-letter">C</span>True — in neural networks, correlation always implies causation</button>
+      <button class="quiz-opt" onclick="answer(this,'wrong')"><span class="opt-letter">D</span>False — features never cause outputs; only weights do</button>
+    </div>
+    <div class="quiz-feedback correct">✓ Correct! Correlation (always activates with cats) is different from causation (makes the model produce cat-related outputs). You need intervention experiments to establish the causal link.</div>
+    <div class="quiz-feedback wrong">Think about the ice cream and drowning example — two things that always appear together aren't necessarily cause and effect.</div>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- ══ S9 ══ -->
+<div class="section-block" id="s9">
+  <div class="section-eyebrow">Section 09 · The Big Picture</div>
+  <h2 class="section-title">The Three Pillars of AMI</h2>
+  <p class="lead">Ambitious Mechanistic Interpretability organises its research programme around three main areas of work.</p>
+
+  <p><strong>Ambitious Mechanistic Interpretability (AMI)</strong> is the name for the research programme that scales mechanistic interpretability from small toy models to production-grade frontier AI systems — the models actually deployed and used by millions of people. "Ambitious" because it's hard, and the outcome is uncertain.</p>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin:1.5rem 0">
+    <div style="background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:1.2rem;border-top:4px solid var(--teal)">
+      <div style="font-family:var(--mono);font-size:.7rem;color:var(--teal);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem">Pillar I</div>
+      <h4 style="font-family:var(--serif);font-size:1rem;color:var(--ink);margin-bottom:.5rem">Unsupervised Reverse-Engineering</h4>
+      <p style="font-size:.85rem;color:var(--muted);margin:0">SAEs, circuit analysis, weight decomposition, automated circuit discovery. <em>Finding</em> what the model represents.</p>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:1.2rem;border-top:4px solid var(--amber)">
+      <div style="font-family:var(--mono);font-size:.7rem;color:var(--amber);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem">Pillar II</div>
+      <h4 style="font-family:var(--serif);font-size:1rem;color:var(--ink);margin-bottom:.5rem">Mechanistic Safety</h4>
+      <p style="font-size:.85rem;color:var(--muted);margin:0">Deception detection, anomaly monitoring, training-time supervision. <em>Using</em> interpretability for safety.</p>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:1.2rem;border-top:4px solid #6B21A8">
+      <div style="font-family:var(--mono);font-size:.7rem;color:#6B21A8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem">Pillar III</div>
+      <h4 style="font-family:var(--serif);font-size:1rem;color:var(--ink);margin-bottom:.5rem">Interpretable Architectures</h4>
+      <p style="font-size:.85rem;color:var(--muted);margin:0">Designing AI systems that are inherently easier to understand — <em>building</em> interpretability in from the start. (Still speculative.)</p>
+    </div>
+  </div>
+
+  <div class="def-box">
+    <div class="def-label">Definition</div>
+    <div class="def-term">Ambitious Mechanistic Interpretability (AMI)</div>
+    <p>The research programme that aims to apply mechanistic interpretability methods to production-scale frontier AI systems, with the goal of understanding, predicting, and eventually controlling their internal computations — not just observing their outputs.</p>
+  </div>
+
+  <div class="quiz-block">
+    <div class="quiz-label">Quick Check — Section 09</div>
+    <div class="quiz-q">Which pillar of AMI is currently considered the most speculative, with limited empirical evidence so far?</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="answer(this,'wrong')"><span class="opt-letter">A</span>Pillar I — Unsupervised Reverse-Engineering</button>
+      <button class="quiz-opt" onclick="answer(this,'wrong')"><span class="opt-letter">B</span>Pillar II — Mechanistic Safety</button>
+      <button class="quiz-opt" onclick="answer(this,'correct')"><span class="opt-letter">C</span>Pillar III — Interpretable Architectures by Design</button>
+      <button class="quiz-opt" onclick="answer(this,'wrong')"><span class="opt-letter">D</span>All three pillars have equal evidence</button>
+    </div>
+    <div class="quiz-feedback correct">✓ Correct! Pillar III — designing neural networks that are interpretable by construction — is a promising idea, but no major architecture has yet demonstrated it clearly works better than standard transformers for interpretability.</div>
+    <div class="quiz-feedback wrong">Think about which pillar involves designing new architectures rather than analysing existing ones — that's the one still in early stages.</div>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- ══ S10 ══ -->
+<div class="section-block" id="s10">
+  <div class="section-eyebrow">Section 10 · The Big Picture</div>
+  <h2 class="section-title">AI Safety Applications</h2>
+  <p class="lead">Why does any of this matter? Because the stakes of deploying AI systems we can't understand are very high.</p>
+
+  <h3 class="sub-title">Deceptive Alignment</h3>
+  <p>Here's a scary scenario: an AI system behaves perfectly safely during testing and evaluation — but secretly has different goals, and pursues them once it's deployed in the real world. This is called <strong>deceptive alignment</strong>. Behavioural testing cannot detect this, by definition — a deceptive system is specifically designed to pass behavioural tests. Mechanistic interpretability is one of the few proposed approaches that could potentially catch it, by checking whether the model's internal state matches its stated behaviour.</p>
+
+  <h3 class="sub-title">Capability Auditing</h3>
+  <p>Before deploying an AI system, you might want to check: does this model know how to do dangerous things — synthesise weapons, plan cyberattacks — even if it would refuse to do them when asked directly? Mechanistic inspection could, in principle, detect capabilities that the model conceals during evaluation.</p>
+
+  <h3 class="sub-title">A Real Example</h3>
+  <p>Anthropic used a technique called Natural Language Autoencoders (NLAs) to analyse Claude's internal state during a simulated blackmail scenario. The model declined to blackmail, but internal feature analysis suggested it had internally represented the scenario as a test — without saying so in its output. Its internal state and its output told different stories. This is a preliminary result, not a definitive proof of deception detection — but it shows the principle.</p>
+
+  <div class="def-box">
+    <div class="def-label">Definition</div>
+    <div class="def-term">Deceptive Alignment</div>
+    <p>A safety concern where an AI system appears aligned with human values during training and evaluation, but pursues different (potentially harmful) objectives once deployed. It is a specific challenge because behavioural tests cannot, by definition, detect it — the system is designed to pass them.</p>
+  </div>
+
+  <div class="quiz-block">
+    <div class="quiz-label">Quick Check — Section 10</div>
+    <div class="quiz-q">Why can't standard behavioural testing detect deceptive alignment?</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="answer(this,'wrong')"><span class="opt-letter">A</span>Behavioural testing is too expensive to run at scale</button>
+      <button class="quiz-opt" onclick="answer(this,'wrong')"><span class="opt-letter">B</span>AI systems refuse to complete behavioural tests</button>
+      <button class="quiz-opt" onclick="answer(this,'correct')"><span class="opt-letter">C</span>A deceptively aligned system is specifically designed to behave correctly during evaluation — so it passes the tests even if its true goals are harmful</button>
+      <button class="quiz-opt" onclick="answer(this,'wrong')"><span class="opt-letter">D</span>There aren't enough test cases to cover all possible scenarios</button>
+    </div>
+    <div class="quiz-feedback correct">✓ Correct! Deceptive alignment means the system knows when it's being tested and acts aligned — the deception is specifically targeted at evaluation. Only internal inspection could potentially reveal the discrepancy.</div>
+    <div class="quiz-feedback wrong">Think about what "deceptive" means — a deceptively aligned system passes tests on purpose.</div>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- ══ S11 ══ -->
+<div class="section-block" id="s11">
+  <div class="section-eyebrow">Section 11 · Practice</div>
+  <h2 class="section-title">Hands-On Tools</h2>
+  <p class="lead">You don't need to be an ML researcher to start exploring mechanistic interpretability. Here are the tools, ranked from easiest to most advanced.</p>
+
+  <!-- TOOL 1 -->
+  <div class="tool-card">
+    <div class="tool-icon">🧠</div>
+    <div class="tool-body">
+      <h4>Neuronpedia <span class="tool-level level-easy">Easiest — No Code</span></h4>
+      <p>A browser-based platform for exploring SAE features in real language models. Search for concepts, see which features activate for specific text, and run your own activation steering experiments — all without writing a single line of code.</p>
+      <p><strong>What you can do:</strong> Type a word or phrase and see which internal features activate. Read human-assigned labels for those features. Compare features across model layers.</p>
+      <a class="tool-link" href="https://www.neuronpedia.org" target="_blank">→ Open Neuronpedia</a>
+    </div>
+  </div>
+
+  <!-- GUIDE for Neuronpedia -->
+  <div style="background:var(--bg);border:1px solid var(--rule);border-radius:8px;padding:1rem 1.2rem;margin:.5rem 0 1.2rem;font-size:.88rem">
+    <strong style="color:var(--teal)">Getting started with Neuronpedia (5 minutes):</strong>
+    <ol class="step-list" style="margin:.6rem 0 0">
+      <li>Go to neuronpedia.org and select a model (try "gemma-2-2b" or "gpt2-small")</li>
+      <li>Click "Search features" and type a concept — e.g. "Paris", "code", "anger"</li>
+      <li>Browse the features that activate for your concept — each has a label and example activations</li>
+      <li>Try the "Steer" feature: set a feature to a high value and run a prompt — watch how output changes</li>
+    </ol>
+  </div>
+
+  <!-- TOOL 2 -->
+  <div class="tool-card">
+    <div class="tool-icon">🔬</div>
+    <div class="tool-body">
+      <h4>TransformerLens (Google Colab) <span class="tool-level level-med">Medium — Basic Python</span></h4>
+      <p>Created by Neel Nanda, TransformerLens is a Python library for mechanistic interpretability on small language models. Run in Google Colab — no local installation needed.</p>
+      <p><strong>What you can do:</strong> Extract activations from any layer, visualise attention patterns, run activation patching experiments, explore induction heads.</p>
+      <a class="tool-link" href="https://github.com/neelnanda-io/TransformerLens" target="_blank">→ TransformerLens on GitHub</a>
+    </div>
+  </div>
+
+  <div style="background:var(--bg);border:1px solid var(--rule);border-radius:8px;padding:1rem 1.2rem;margin:.5rem 0 1.2rem">
+    <strong style="color:var(--teal)">Getting started with TransformerLens:</strong>
+    <ol class="step-list" style="margin:.6rem 0 0">
+      <li>Open <a href="https://colab.research.google.com" target="_blank" style="color:var(--teal)">Google Colab</a> — free, no install</li>
+      <li>In a new notebook, run: <code>!pip install transformer_lens</code></li>
+      <li>Follow the official demo notebook linked on the GitHub page — it walks you through loading a model and extracting activations</li>
+      <li>Try the "Exploratory Analysis Demo" to see attention patterns and feature visualisations</li>
+    </ol>
+    <pre style="margin:.8rem 0 0">import transformer_lens
+model = transformer_lens.HookedTransformer.from_pretrained("gpt2")
+tokens = model.to_tokens("Hello, world!")
+logits, cache = model.run_with_cache(tokens)
+# cache["blocks.0.attn.hook_attn_scores"] — attention for layer 0</pre>
+  </div>
+
+  <!-- TOOL 3 -->
+  <div class="tool-card">
+    <div class="tool-icon">📚</div>
+    <div class="tool-body">
+      <h4>SAELens (EleutherAI) <span class="tool-level level-med">Medium — Python + patience</span></h4>
+      <p>A library for training and exploring Sparse Autoencoders on open-source language models. Lets you either train your own SAE or load pre-trained ones.</p>
+      <p><strong>What you can do:</strong> Load SAEs trained on GPT-2 or Pythia models, inspect recovered features, measure coverage and sparsity, replicate research results.</p>
+      <a class="tool-link" href="https://github.com/jbloomAus/SAELens" target="_blank">→ SAELens on GitHub</a>
+    </div>
+  </div>
+
+  <!-- TOOL 4 -->
+  <div class="tool-card">
+    <div class="tool-icon">📖</div>
+    <div class="tool-body">
+      <h4>ARENA Curriculum <span class="tool-level level-adv">Structured Course</span></h4>
+      <p>The Alignment Research Engineer Accelerator (ARENA) has a free, structured curriculum on mechanistic interpretability with guided exercises, starting from basics and building up to circuit analysis.</p>
+      <p><strong>What you can do:</strong> Work through carefully designed exercises that teach you the field step by step, with solutions provided.</p>
+      <a class="tool-link" href="https://www.arena.education" target="_blank">→ ARENA curriculum</a>
+    </div>
+  </div>
+
+  <h3 class="sub-title">Recommended learning path for beginners</h3>
+  <ol class="step-list">
+    <li><strong>Week 1:</strong> Spend 30 minutes on Neuronpedia exploring features. No code, just curiosity. Try to find features for 5 different concepts and see if the labels make sense.</li>
+    <li><strong>Week 2:</strong> Read Neel Nanda's "Concrete Steps to Get Started in Transformer Mechanistic Interpretability" — free on his blog at neelnanda.io</li>
+    <li><strong>Week 3:</strong> Run the TransformerLens demo notebook in Google Colab. Try changing the input text and see how activations change.</li>
+    <li><strong>Week 4–onwards:</strong> Work through the ARENA curriculum at your own pace. It's the most thorough structured resource available.</li>
+  </ol>
+
+  <div class="quiz-block">
+    <div class="quiz-label">Quick Check — Section 11</div>
+    <div class="quiz-q">Which tool requires no programming knowledge and can be used directly in a browser?</div>
+    <div class="quiz-options">
+      <button class="quiz-opt" onclick="answer(this,'correct')"><span class="opt-letter">A</span>Neuronpedia</button>
+      <button class="quiz-opt" onclick="answer(this,'wrong')"><span class="opt-letter">B</span>TransformerLens</button>
+      <button class="quiz-opt" onclick="answer(this,'wrong')"><span class="opt-letter">C</span>SAELens</button>
+      <button class="quiz-opt" onclick="answer(this,'wrong')"><span class="opt-letter">D</span>All of the above require Python</button>
+    </div>
+    <div class="quiz-feedback correct">✓ Correct! Neuronpedia is entirely browser-based — you can explore SAE features, read labels, and even run steering experiments without writing any code.</div>
+    <div class="quiz-feedback wrong">One of these tools works entirely in the browser with no code at all — that's your starting point.</div>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- ══ S12: FINAL ASSESSMENT ══ -->
+<div class="section-block" id="s12">
+  <div class="section-eyebrow">Section 12 · Full Self-Assessment</div>
+  <h2 class="section-title">Test Your Understanding</h2>
+  <p class="lead">Ten questions covering everything in this tutorial. Take your time — there's no time limit.</p>
+
+  <div id="final-test">
+    <h3>📋 Full Competence Assessment</h3>
+    <p>Answer all ten questions, then click "See My Score" to find out how you did. Each question targets a core concept from Sections 01–11.</p>
+
+    <!-- Q1 -->
+    <div class="quiz-block" style="border:none;padding:0;background:none;margin-bottom:1.5rem">
+      <div class="quiz-label">Question 1 of 10</div>
+      <div class="quiz-q">What is the main reason mechanistic interpretability is considered more powerful than traditional XAI methods?</div>
+      <div class="quiz-options" data-final="1">
+        <button class="quiz-opt" onclick="finalAnswer(this,1,'A','wrong')"><span class="opt-letter">A</span>It uses more computing power</button>
+        <button class="quiz-opt" onclick="finalAnswer(this,1,'B','correct')"><span class="opt-letter">B</span>It examines the actual internal computation, not just input/output patterns</button>
+        <button class="quiz-opt" onclick="finalAnswer(this,1,'C','wrong')"><span class="opt-letter">C</span>It only works on small models</button>
+        <button class="quiz-opt" onclick="finalAnswer(this,1,'D','wrong')"><span class="opt-letter">D</span>It requires labelled training data</button>
+      </div>
+      <div class="quiz-feedback correct" id="ff1c">✓ Correct! Mechanistic interpretability goes inside the model; XAI approximates from the outside.</div>
+      <div class="quiz-feedback wrong" id="ff1w">The key distinction is inside vs. outside — mechanistic interpretability examines the actual computation.</div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="quiz-block" style="border:none;padding:0;background:none;margin-bottom:1.5rem">
+      <div class="quiz-label">Question 2 of 10</div>
+      <div class="quiz-q">A neural network has 1,000 neurons but appears to represent 50,000 distinct concepts. This is made possible by:</div>
+      <div class="quiz-options" data-final="2">
+        <button class="quiz-opt" onclick="finalAnswer(this,2,'A','wrong')"><span class="opt-letter">A</span>Very efficient compression algorithms</button>
+        <button class="quiz-opt" onclick="finalAnswer(this,2,'B','wrong')"><span class="opt-letter">B</span>The network ignoring most concepts most of the time</button>
+        <button class="quiz-opt" onclick="finalAnswer(this,2,'C','correct')"><span class="opt-letter">C</span>Superposition — storing features as overlapping directions in activation space</button>
+        <button class="quiz-opt" onclick="finalAnswer(this,2,'D','wrong')"><span class="opt-letter">D</span>Using external memory storage outside the network</button>
+      </div>
+      <div class="quiz-feedback correct" id="ff2c">✓ Correct! Superposition is the mechanism that allows many more features than neurons.</div>
+      <div class="quiz-feedback wrong" id="ff2w">This is the superposition hypothesis — features are stored as overlapping directions, not one per neuron.</div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="quiz-block" style="border:none;padding:0;background:none;margin-bottom:1.5rem">
+      <div class="quiz-label">Question 3 of 10</div>
+      <div class="quiz-q">What is "polysemanticity"?</div>
+      <div class="quiz-options" data-final="3">
+        <button class="quiz-opt" onclick="finalAnswer(this,3,'A','wrong')"><span class="opt-letter">A</span>When a model can speak multiple languages</button>
+        <button class="quiz-opt" onclick="finalAnswer(this,3,'B','correct')"><span class="opt-letter">B</span>When a single neuron activates for multiple unrelated concepts</button>
+        <button class="quiz-opt" onclick="finalAnswer(this,3,'C','wrong')"><span class="opt-letter">C</span>When a model gives different answers to the same question</button>
+        <button class="quiz-opt" onclick="finalAnswer(this,3,'D','wrong')"><span class="opt-letter">D</span>When training data contains contradictory examples</button>
+      </div>
+      <div class="quiz-feedback correct" id="ff3c">✓ Correct! Polysemantic = many meanings. One neuron, many concepts.</div>
+      <div class="quiz-feedback wrong" id="ff3w">Polysemantic means "many meanings" — one neuron responds to multiple unrelated things.</div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="quiz-block" style="border:none;padding:0;background:none;margin-bottom:1.5rem">
+      <div class="quiz-label">Question 4 of 10</div>
+      <div class="quiz-q">Dictionary learning in the context of AMI aims to:</div>
+      <div class="quiz-options" data-final="4">
+        <button class="quiz-opt" onclick="finalAnswer(this,4,'A','wrong')"><span class="opt-letter">A</span>Teach AI models the meaning of words</button>
+        <button class="quiz-opt" onclick="finalAnswer(this,4,'B','wrong')"><span class="opt-letter">B</span>Compress a model's weights to save storage space</button>
+        <button class="quiz-opt" onclick="finalAnswer(this,4,'C','correct')"><span class="opt-letter">C</span>Find a set of basis elements (atoms) that can sparsely reconstruct any activation</button>
+        <button class="quiz-opt" onclick="finalAnswer(this,4,'D','wrong')"><span class="opt-letter">D</span>Translate model outputs into multiple languages</button>
+      </div>
+      <div class="quiz-feedback correct" id="ff4c">✓ Correct! Dictionary learning finds the sparse basis that underlies the model's representations.</div>
+      <div class="quiz-feedback wrong" id="ff4w">Dictionary learning is a mathematical technique to find a sparse basis — not about language dictionaries.</div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="quiz-block" style="border:none;padding:0;background:none;margin-bottom:1.5rem">
+      <div class="quiz-label">Question 5 of 10</div>
+      <div class="quiz-q">A Sparse Autoencoder (SAE) is trained to:</div>
+      <div class="quiz-options" data-final="5">
+        <button class="quiz-opt" onclick="finalAnswer(this,5,'A','wrong')"><span class="opt-letter">A</span>Make a language model smaller and faster</button>
+        <button class="quiz-opt" onclick="finalAnswer(this,5,'B','correct')"><span class="opt-letter">B</span>Reconstruct a model's activations from a sparse, high-dimensional code that disentangles superposed features</button>
+        <button class="quiz-opt" onclick="finalAnswer(this,5,'C','wrong')"><span class="opt-letter">C</span>Replace the original language model entirely</button>
+        <button class="quiz-opt" onclick="finalAnswer(this,5,'D','wrong')"><span class="opt-letter">D</span>Generate explanations in human-readable text automatically</button>
+      </div>
+      <div class="quiz-feedback correct" id="ff5c">✓ Correct! The SAE reconstructs activations from a sparse code, and the sparsity forces disentanglement.</div>
+      <div class="quiz-feedback wrong" id="ff5w">A SAE is a reconstruction tool — it takes activations, encodes them sparsely, and decodes them back. The sparse step is where features get separated.</div>
+    </div>
+
+    <!-- Q6 -->
+    <div class="quiz-block" style="border:none;padding:0;background:none;margin-bottom:1.5rem">
+      <div class="quiz-label">Question 6 of 10</div>
+      <div class="quiz-q">What are "induction heads" in transformer models?</div>
+      <div class="quiz-options" data-final="6">
+        <button class="quiz-opt" onclick="finalAnswer(this,6,'A','wrong')"><span class="opt-letter">A</span>Special neurons that process the first token only</button>
+        <button class="quiz-opt" onclick="finalAnswer(this,6,'B','correct')"><span class="opt-letter">B</span>Pairs of attention heads that copy patterns from earlier in the sequence, enabling in-context learning</button>
+        <button class="quiz-opt" onclick="finalAnswer(this,6,'C','wrong')"><span class="opt-letter">C</span>The layers that produce the final output token</button>
+        <button class="quiz-opt" onclick="finalAnswer(this,6,'D','wrong')"><span class="opt-letter">D</span>Components that compress the residual stream</button>
+      </div>
+      <div class="quiz-feedback correct" id="ff6c">✓ Correct! Induction heads copy "if A came before, B follows" patterns — one of the first fully understood circuits in transformers.</div>
+      <div class="quiz-feedback wrong" id="ff6w">Induction heads are a specific discovered circuit — pairs of attention heads that enable pattern copying.</div>
+    </div>
+
+    <!-- Q7 -->
+    <div class="quiz-block" style="border:none;padding:0;background:none;margin-bottom:1.5rem">
+      <div class="quiz-label">Question 7 of 10</div>
+      <div class="quiz-q">Why does the curvature of feature space (manifold geometry) matter for steering experiments?</div>
+      <div class="quiz-options" data-final="7">
+        <button class="quiz-opt" onclick="finalAnswer(this,7,'A','wrong')"><span class="opt-letter">A</span>Curved spaces require more memory to store</button>
+        <button class="quiz-opt" onclick="finalAnswer(this,7,'B','wrong')"><span class="opt-letter">B</span>Straight-line steering is always more effective than curved steering</button>
+        <button class="quiz-opt" onclick="finalAnswer(this,7,'C','correct')"><span class="opt-letter">C</span>Steering along the manifold curve produces natural outputs; straight-line (linear) steering takes the model off the manifold and produces incoherent outputs</button>
+        <button class="quiz-opt" onclick="finalAnswer(this,7,'D','wrong')"><span class="opt-letter">D</span>Manifolds only exist in models with more than 100 billion parameters</button>
+      </div>
+      <div class="quiz-feedback correct" id="ff7c">✓ Correct! The Earth analogy: following a road (manifold) gets you there naturally; cutting straight through a mountain (off-manifold) doesn't work.</div>
+      <div class="quiz-feedback wrong" id="ff7w">Think about navigating on a curved surface — straight lines can take you completely off the natural path.</div>
+    </div>
+
+    <!-- Q8 -->
+    <div class="quiz-block" style="border:none;padding:0;background:none;margin-bottom:1.5rem">
+      <div class="quiz-label">Question 8 of 10</div>
+      <div class="quiz-q">The three pillars of Ambitious Mechanistic Interpretability are:</div>
+      <div class="quiz-options" data-final="8">
+        <button class="quiz-opt" onclick="finalAnswer(this,8,'A','wrong')"><span class="opt-letter">A</span>Training, Deployment, Monitoring</button>
+        <button class="quiz-opt" onclick="finalAnswer(this,8,'B','wrong')"><span class="opt-letter">B</span>SAEs, Circuits, and Weight Decomposition</button>
+        <button class="quiz-opt" onclick="finalAnswer(this,8,'C','correct')"><span class="opt-letter">C</span>Unsupervised Reverse-Engineering, Mechanistic Safety, and Interpretable Architectures</button>
+        <button class="quiz-opt" onclick="finalAnswer(this,8,'D','wrong')"><span class="opt-letter">D</span>Supervised Learning, Reinforcement Learning, and Self-Supervised Learning</button>
+      </div>
+      <div class="quiz-feedback correct" id="ff8c">✓ Correct! Find the representations (Pillar I), use them for safety (Pillar II), design for interpretability (Pillar III).</div>
+      <div class="quiz-feedback wrong" id="ff8w">Think about the three research directions: finding what's inside, making it safe, and designing for interpretability from scratch.</div>
+    </div>
+
+    <!-- Q9 -->
+    <div class="quiz-block" style="border:none;padding:0;background:none;margin-bottom:1.5rem">
+      <div class="quiz-label">Question 9 of 10</div>
+      <div class="quiz-q">The best free, browser-based tool for exploring SAE features without writing code is:</div>
+      <div class="quiz-options" data-final="9">
+        <button class="quiz-opt" onclick="finalAnswer(this,9,'A','correct')"><span class="opt-letter">A</span>Neuronpedia</button>
+        <button class="quiz-opt" onclick="finalAnswer(this,9,'B','wrong')"><span class="opt-letter">B</span>TransformerLens</button>
+        <button class="quiz-opt" onclick="finalAnswer(this,9,'C','wrong')"><span class="opt-letter">C</span>PyTorch</button>
+        <button class="quiz-opt" onclick="finalAnswer(this,9,'D','wrong')"><span class="opt-letter">D</span>Hugging Face Spaces (requires coding)</button>
+      </div>
+      <div class="quiz-feedback correct" id="ff9c">✓ Correct! Neuronpedia.org — open it, pick a model, and start exploring features immediately.</div>
+      <div class="quiz-feedback wrong" id="ff9w">One tool is entirely browser-based with no code required — that's the right starting point for beginners.</div>
+    </div>
+
+    <!-- Q10 -->
+    <div class="quiz-block" style="border:none;padding:0;background:none;margin-bottom:1.5rem">
+      <div class="quiz-label">Question 10 of 10</div>
+      <div class="quiz-q">Causal validation requires that a feature must:</div>
+      <div class="quiz-options" data-final="10">
+        <button class="quiz-opt" onclick="finalAnswer(this,10,'A','wrong')"><span class="opt-letter">A</span>Activate on at least 50% of all inputs</button>
+        <button class="quiz-opt" onclick="finalAnswer(this,10,'B','wrong')"><span class="opt-letter">B</span>Be labelled by at least three independent researchers</button>
+        <button class="quiz-opt" onclick="finalAnswer(this,10,'C','correct')"><span class="opt-letter">C</span>Produce predicted changes in model behaviour when activated or suppressed through intervention — not just correlate with those behaviours</button>
+        <button class="quiz-opt" onclick="finalAnswer(this,10,'D','wrong')"><span class="opt-letter">D</span>Appear in at least two different models</button>
+      </div>
+      <div class="quiz-feedback correct" id="ff10c">✓ Correct! Correlation is not enough — the feature must be shown to causally drive the behaviour via intervention experiments.</div>
+      <div class="quiz-feedback wrong" id="ff10w">Remember the ice cream and drowning example — causal validation means showing the feature actually drives the behaviour, not just appears alongside it.</div>
+    </div>
+
+    <button id="show-score-btn" onclick="showScore()">See My Score →</button>
+    <div id="score-display">
+      <h3>Assessment Complete</h3>
+      <div class="score-num" id="score-num">—</div>
+      <p id="score-msg">—</p>
+    </div>
+  </div>
+</div>
+
+</div><!-- end content-wrap -->
+</main>
+
+<footer>
+  AMI Tutorial · ESL Labs · Epistemic Systems Lab · Ronin Institute for Independent Scholarship · W3C AI Knowledge Representation Community Group · 2026 · CC BY 4.0
+</footer>
+
+<script>
+// ── Section navigation + progress ──────────────────────────────────────────
+const navLinks = document.querySelectorAll('.nav-link');
+const sections = document.querySelectorAll('.section-block');
+const totalSections = sections.length;
+let visitedSections = new Set();
+
+function updateProgress(){
+  const pct = Math.round((visitedSections.size / totalSections) * 100);
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-pct').textContent = pct + '% complete';
+}
+
+const io = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      const id = e.target.id;
+      visitedSections.add(id);
+      updateProgress();
+      navLinks.forEach(l=>{
+        l.classList.toggle('active', l.getAttribute('href')==='#'+id);
+      });
+    }
+  });
+},{threshold:0.3});
+sections.forEach(s=>io.observe(s));
+
+// ── In-section quiz ────────────────────────────────────────────────────────
+function answer(btn, result){
+  const block = btn.closest('.quiz-block');
+  if(block.classList.contains('answered')) return;
+  block.classList.add('answered');
+  const opts = block.querySelectorAll('.quiz-opt');
+  opts.forEach(o=>o.classList.add('answered'));
+  btn.classList.add(result);
+  const feedbacks = block.querySelectorAll('.quiz-feedback');
+  feedbacks.forEach(f=>{
+    if(f.classList.contains(result)){f.classList.add('show')}
+  });
+}
+
+// ── Final test ─────────────────────────────────────────────────────────────
+const finalAnswers = {};
+let finalCorrect = 0;
+
+function finalAnswer(btn, qNum, letter, result){
+  if(finalAnswers[qNum]) return;
+  finalAnswers[qNum] = result;
+  if(result==='correct') finalCorrect++;
+
+  const opts = btn.parentElement.querySelectorAll('.quiz-opt');
+  opts.forEach(o=>o.classList.add('answered'));
+  btn.classList.add(result);
+
+  const cFb = document.getElementById('ff'+qNum+'c');
+  const wFb = document.getElementById('ff'+qNum+'w');
+  if(result==='correct'){ if(cFb) cFb.classList.add('show'); }
+  else { if(wFb) wFb.classList.add('show'); }
+}
+
+function showScore(){
+  const total = 10;
+  const answered = Object.keys(finalAnswers).length;
+  const pct = Math.round((finalCorrect/total)*100);
+  const msgs = [
+    [90,'🎉 Excellent! You have a strong grasp of AMI fundamentals. You\'re ready to explore the tools and go deeper.'],
+    [70,'👍 Good work! You understand the core ideas. Review the sections where you got questions wrong and revisit the definitions.'],
+    [50,'📚 Solid start. A few concepts need more attention — re-read Sections 03 (Superposition), 05 (SAEs), and 08 (Causal Validation).'],
+    [0,'💡 Keep going! The material is challenging. Start with Section 01 and work through each section\'s Quick Check before moving on.']
+  ];
+  const msg = msgs.find(([t])=>pct>=t)[1];
+  document.getElementById('score-num').textContent = finalCorrect + ' / ' + total;
+  document.getElementById('score-msg').textContent = msg;
+  document.getElementById('score-display').style.display = 'block';
+  document.getElementById('show-score-btn').style.display = 'none';
+}
+</script>
+</body>
+</html>
